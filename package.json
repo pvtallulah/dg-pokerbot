@@ -19,6 +19,7 @@
   "homepage": "https://github.com/pvtallulah/dg-pokerbot#readme",
   "dependencies": {
     "@edium/fsm": "^2.1.4",
+    "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "fs.promises.exists": "^1.1.4",
     "googleapis": "^113.0.0",

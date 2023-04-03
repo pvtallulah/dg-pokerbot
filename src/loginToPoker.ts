@@ -1,10 +1,9 @@
-import { getUrl } from "./readEmail";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { State } from "@edium/fsm";
 
 import { Context } from "./interfaces";
-import * as constants from "./constants";
+import config from "./config/config";
 
 export const startPuppeteer = async (
   state: State,
@@ -33,7 +32,7 @@ export const loadDecentralGames = async (
 ): Promise<void> => {
   try {
     if (context.page) {
-      await context.page.goto("https://app.decentral.games/");
+      await context.page.goto(config.pokerPage);
       state.trigger("startPlayingButton");
     } else {
       throw new Error("Error opening page");
@@ -51,7 +50,7 @@ export const startPlayingButton = async (
 ): Promise<void> => {
   try {
     const startPlayingSelector = await context.page?.waitForSelector(
-      constants.START_PLAYING_SELECTOR
+      config.selectors.loginToPoker.startPlayingButton
     );
     await startPlayingSelector?.click();
     state.trigger("loginWithEmailButton");
@@ -70,7 +69,7 @@ export const loginWithEmailButton = async (
     const { page } = context;
     if (page) {
       const mailImageSelector = await page.waitForSelector(
-        constants.MAIL_IMAGE_SELECTOR
+        config.selectors.loginToPoker.emailImageButton
       );
       await mailImageSelector?.click();
       state.trigger("fillEmailInput");
@@ -87,9 +86,9 @@ export const fillEmailInput = async (state: State, context: Context) => {
     const { page } = context;
     if (page) {
       const emailInputSelector = await page.waitForSelector(
-        constants.EMAIL_INPUT_SELECTOR
+        config.selectors.loginToPoker.emailInput
       );
-      await emailInputSelector?.type("maikinahara.dg@gmail.com", {
+      await emailInputSelector?.type(config.user.email, {
         delay: 50,
       });
       state.trigger("clickContinueEmailButton");
@@ -109,21 +108,23 @@ export const clickContinueEmailButton = async (
     if (page) {
       await page.waitForFunction(() =>
         Array.from(document.querySelectorAll("button")).some(
-          (button) => button.textContent?.trim() === "Continue"
+          (button) =>
+            button.textContent?.trim() ===
+            config.selectors.loginToPoker.continueButton
         )
       );
       await page.evaluate(() => {
         const continueButton = Array.from(
           document.querySelectorAll("button")
         ).find((button) => {
-          return button.textContent?.trim() === "Continue";
+          return (
+            button.textContent?.trim() ===
+            config.selectors.loginToPoker.continueButton
+          );
         });
         continueButton?.click();
       });
       state.trigger("createOauth2Client");
-      // const continueEmailButtonSelector = await page.waitForSelector(
-      //   constants.CONTINUE_TEXT_SELECTOR
-      // );
     }
   } catch (error) {
     console.log(error);
@@ -131,30 +132,61 @@ export const clickContinueEmailButton = async (
   }
 };
 
-export const loginToPoker = async (): Promise<void> => {
-  const browser = await puppeteer.launch({ headless: false });
-  const page = await browser.newPage();
+export const agreeAndPlay = async (state: State, context: Context) => {
+  try {
+    const { page } = context;
+    if (!page) throw new Error("Page not found");
+    let startPlayingButton: any = null;
+    let agreeAndPlayButton: any = null;
+    let buttonToPress: any = null;
+    try {
+      startPlayingButton = await page.waitForSelector(
+        config.selectors.loginToPoker.startPlayingButton,
+        {
+          visible: true,
+          timeout: 60000,
+        }
+      );
+      buttonToPress = config.selectors.loginToPoker.startPlayingButton;
+    } catch (error) {
+      console.log(
+        "Start playing button not found, will try to find agree and play button"
+      );
+    }
+    try {
+      if (!startPlayingButton) {
+        agreeAndPlayButton = await page.waitForSelector(
+          config.selectors.loginToPoker.agreeAndPlayButton,
+          {
+            visible: true,
+            timeout: 60000,
+          }
+        );
+      }
+      buttonToPress = config.selectors.loginToPoker.agreeAndPlayButton;
+    } catch (error) {
+      debugger;
+      console.log("Agree and play button not found");
+      throw new Error("Play button and agree button not found");
+    }
 
-  await page.evaluate(() => {
-    const continueButton = Array.from(document.querySelectorAll("button")).find(
-      (button) => button.textContent?.trim() === "Continue"
-    );
-    continueButton?.click();
-  });
-
-  // Wait for 6 seconds
-  await page.waitForTimeout(6000);
-
-  // Execute the readEmail script and get the URL
-  const urlFromEmail = await getUrl(); // Make sure to call the function with the correct parameters if needed
-
-  // Open the URL in a new tab, wait for 5 seconds, and close it
-  const newTab = await browser.newPage();
-  await newTab.goto(urlFromEmail);
-  await newTab.waitForFunction(() => {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve("ok"), 5000);
-    });
-  });
-  await newTab.close();
+    if (!buttonToPress) throw new Error("No button found");
+    await page.click(buttonToPress);
+    try {
+      const step1SelectorButton = await page.waitForSelector(
+        config.selectors.loginToPoker.step1,
+        {
+          visible: true,
+          timeout: 5000,
+        }
+      );
+      if (step1SelectorButton) state.trigger("pokerStep1");
+      else state.trigger("randomizeAvatar");
+    } catch (error) {
+      state.trigger("randomizeAvatar");
+    }
+  } catch (error) {
+    console.log(error);
+    throw new Error("Error clicking continue email button");
+  }
 };

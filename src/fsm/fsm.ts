@@ -1,7 +1,7 @@
-import { State, StateMachine } from "@edium/fsm";
-import { Page } from "puppeteer";
+import { StateMachine } from "@edium/fsm";
 
 import { Context } from "../interfaces";
+
 import {
   startPuppeteer,
   loadDecentralGames,
@@ -9,14 +9,27 @@ import {
   loginWithEmailButton,
   fillEmailInput,
   clickContinueEmailButton,
+  agreeAndPlay,
 } from "../loginToPoker";
+
 import {
   createOauth2Client,
   validateToken,
   getNewToken,
   setCredentials,
   addToken,
-} from "../readEmail";
+} from "../validateGApiCredentials";
+
+import { readEmail, authWeb3Auth } from "../readEmail";
+
+import {
+  randomizeAvatar,
+  selectAvatar,
+  inputAvatarName,
+  confirmAvatarName,
+  pokerStep1,
+  pokerStep2,
+} from "../playPoker";
 
 const context: Context = {
   browser: null,
@@ -24,6 +37,7 @@ const context: Context = {
   code: "",
   oAuth2Client: null,
   token: null,
+  approveLoginUrl: "",
 };
 
 export class PokerbotFSM extends StateMachine {
@@ -96,6 +110,48 @@ export class PokerbotFSM extends StateMachine {
 
     const addTokenState = this.createState("Add token", false, addToken);
 
+    const readEmailState = this.createState("Read Email", false, readEmail);
+
+    const authWeb3AuthState = this.createState(
+      "Auth web3 Auth",
+      false,
+      authWeb3Auth
+    );
+
+    const agreeAndPlayState = this.createState(
+      "Agree and play",
+      false,
+      agreeAndPlay
+    );
+
+    const randomizeAvatarState = this.createState(
+      "Randomize avatar",
+      false,
+      randomizeAvatar
+    );
+
+    const selectAvatarState = this.createState(
+      "Select avatar",
+      false,
+      selectAvatar
+    );
+
+    const inputAvatarNameState = this.createState(
+      "Input avatar name",
+      false,
+      inputAvatarName
+    );
+
+    const confirmAvatarNameState = this.createState(
+      "Confirm avatar name",
+      false,
+      confirmAvatarName
+    );
+
+    const pokerStep1State = this.createState("Poker step 1", false, pokerStep1);
+
+    const pokerStep2State = this.createState("Poker step 2", false, pokerStep2);
+
     const finalState = this.createState("Final state", true);
 
     initialState.addTransition("loadDecentralgames", loadDecentralGamesState);
@@ -131,7 +187,20 @@ export class PokerbotFSM extends StateMachine {
     validateTokenState.addTransition("getNewToken", getNewTokenState);
     getNewTokenState.addTransition("addToken", addTokenState);
     addTokenState.addTransition("setCredentials", setCredentialsState);
-    setCredentialsState.addTransition("finalState", finalState);
+    setCredentialsState.addTransition("readEmail", readEmailState);
+    readEmailState.addTransition("authWeb3Auth", authWeb3AuthState);
+    authWeb3AuthState.addTransition("agreeAndPlay", agreeAndPlayState);
+    agreeAndPlayState.addTransition("randomizeAvatar", randomizeAvatarState);
+    agreeAndPlayState.addTransition("pokerStep1", pokerStep1State);
+    randomizeAvatarState.addTransition("selectAvatar", selectAvatarState);
+    selectAvatarState.addTransition("inputAvatarName", inputAvatarNameState);
+    inputAvatarNameState.addTransition(
+      "confirmAvatarName",
+      confirmAvatarNameState
+    );
+    confirmAvatarNameState.addTransition("pokerStep1", pokerStep1State);
+    pokerStep1State.addTransition("pokerStep2", pokerStep2State);
+    pokerStep2State.addTransition("finalState", finalState);
 
     this.start(initialState);
   }

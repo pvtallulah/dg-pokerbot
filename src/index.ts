@@ -19,7 +19,7 @@ app.get("/", (req, res) => {
       path.join(__dirname, "./code.txt"),
       typeof code === "string" ? code : code[0]
     );
-    pokerbotFSM.trigger("addToken");
+    // pokerbotFSM.trigger("addToken");
     res.status(200).send("Code saved");
   } else {
     res.status(400).send("No code found");
