@@ -1,9 +1,11 @@
 import puppeteer from "puppeteer-extra";
+import { Page, Target } from "puppeteer";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { State } from "@edium/fsm";
 
 import { Context } from "./interfaces";
 import config from "./config/config";
+import { delay } from "./utils/util";
 
 export const startPuppeteer = async (
   state: State,
@@ -106,24 +108,8 @@ export const clickContinueEmailButton = async (
   try {
     const { page } = context;
     if (page) {
-      await page.waitForFunction(() =>
-        Array.from(document.querySelectorAll("button")).some(
-          (button) =>
-            button.textContent?.trim() ===
-            config.selectors.loginToPoker.continueButton
-        )
-      );
-      await page.evaluate(() => {
-        const continueButton = Array.from(
-          document.querySelectorAll("button")
-        ).find((button) => {
-          return (
-            button.textContent?.trim() ===
-            config.selectors.loginToPoker.continueButton
-          );
-        });
-        continueButton?.click();
-      });
+      await page.waitForSelector(config.selectors.loginToPoker.continueButton);
+      await page.click(config.selectors.loginToPoker.continueButton);
       state.trigger("createOauth2Client");
     }
   } catch (error) {
@@ -144,10 +130,11 @@ export const agreeAndPlay = async (state: State, context: Context) => {
         config.selectors.loginToPoker.startPlayingButton,
         {
           visible: true,
-          timeout: 60000,
+          timeout: 15000,
         }
       );
-      buttonToPress = config.selectors.loginToPoker.startPlayingButton;
+      if (startPlayingButton)
+        buttonToPress = config.selectors.loginToPoker.startPlayingButton;
     } catch (error) {
       console.log(
         "Start playing button not found, will try to find agree and play button"
@@ -159,13 +146,13 @@ export const agreeAndPlay = async (state: State, context: Context) => {
           config.selectors.loginToPoker.agreeAndPlayButton,
           {
             visible: true,
-            timeout: 60000,
+            timeout: 15000,
           }
         );
       }
-      buttonToPress = config.selectors.loginToPoker.agreeAndPlayButton;
+      if (agreeAndPlayButton)
+        buttonToPress = config.selectors.loginToPoker.agreeAndPlayButton;
     } catch (error) {
-      debugger;
       console.log("Agree and play button not found");
       throw new Error("Play button and agree button not found");
     }

@@ -1,8 +1,8 @@
+import { Page, Target } from "puppeteer";
 import { Auth, google } from "googleapis";
 import { Context } from "./interfaces/fsm";
 import { State } from "@edium/fsm";
 import { delay } from "./utils/util";
-
 export const readEmail = async (
   state: State,
   context: Context
@@ -64,5 +64,37 @@ export const authWeb3Auth = async (
   await newTab.goto(approveLoginUrl);
   await delay(2000);
   await newTab.close();
+  const targets: Target[] | undefined = context.browser?.targets();
+  let foundWeb3AuthTargets: Target[] = [];
+  if (targets && targets.length) {
+    targets.forEach((target) => {
+      if (target.url().includes("https://cyan.openlogin.com/"))
+        foundWeb3AuthTargets.push(target);
+    });
+  }
+  if (foundWeb3AuthTargets.length) {
+    for (const target of foundWeb3AuthTargets) {
+      const type = target.type();
+      if (type === "page" || type === "background_page") {
+        const page = await target.page();
+        if (page) {
+          try {
+            const maybeNextTimeButton = await page.waitForSelector(
+              '[aria-label="Maybe next time"]',
+              {
+                visible: true,
+                timeout: 60000,
+              }
+            );
+            if (maybeNextTimeButton) {
+              await maybeNextTimeButton.click();
+            }
+          } catch (error) {
+            console.log(error);
+          }
+        }
+      }
+    }
+  }
   state.trigger("agreeAndPlay");
 };

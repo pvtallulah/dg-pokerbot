@@ -8,6 +8,7 @@ import { credentialConfig } from "./gApi/credentials";
 import { Context } from "./interfaces";
 import { delay } from "./utils/util";
 
+import config from "./config/config";
 const SCOPES: string[] = ["https://www.googleapis.com/auth/gmail.readonly"];
 const TOKEN_PATH: string = path.join(__dirname, "gApi", "token.json");
 
@@ -81,7 +82,7 @@ export const getNewToken = async (
   if (!page) throw new Error("No page found");
   if (!oAuth2Client) throw new Error("No oAuth2Client found");
   const authUrl = oAuth2Client.generateAuthUrl({
-    access_type: "offline",
+    access_type: "online",
     scope: SCOPES,
   });
   if (!authUrl) throw new Error("No authUrl found");
@@ -93,14 +94,14 @@ export const getNewToken = async (
   const emailInputSelector = await authPage.waitForSelector(
     constants.GMAIL_EMAIL_INPUT_SELECTOR
   );
-  await emailInputSelector?.type("maikinahara.dg@gmail.com", {
+  await emailInputSelector?.type(config.user.email, {
     delay: 5,
   });
   const continueEmailPasswordSelector =
     "button.VfPpkd-LgbsSe.VfPpkd-LgbsSe-OWXEXe-k8QpJ.VfPpkd-LgbsSe-OWXEXe-dgl2Hf.nCP5yc.AjY5Oe.DuMIQc.LQeN7.qIypjc.TrZEUc.lw1w4b";
   await authPage.click(continueEmailPasswordSelector);
   await authPage.waitForSelector('input[type="password"]', { visible: true });
-  await authPage.type('input[type="password"]', "Maiki9716!");
+  await authPage.type('input[type="password"]', config.user.emailPassword);
   await authPage.click(continueEmailPasswordSelector);
   await delay(10000);
   const pageContent = await authPage.content();

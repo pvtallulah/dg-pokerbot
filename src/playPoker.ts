@@ -10,7 +10,6 @@ export const randomizeAvatar = async (
   const { page } = context;
   if (!page) throw new Error("No page found");
   try {
-    debugger;
     await page.waitForSelector(
       config.selectors.playPoker.randomizeAvatarButton,
       {
@@ -35,7 +34,7 @@ export const selectAvatar = async (
 ): Promise<void> => {
   const { page } = context;
   if (!page) throw new Error("No page found");
-  debugger;
+
   try {
     await page.waitForSelector(config.selectors.playPoker.selectAvatarButton, {
       visible: true,
@@ -97,15 +96,12 @@ export const confirmAvatarName = async (
           timeout: 5000,
         }
       );
-      debugger;
       if (step1SelectorButton) {
         state.trigger("pokerStep1");
       } else {
         throw new Error("Not implemented");
       }
-    } catch (error) {
-      debugger;
-    }
+    } catch (error) {}
   } catch (error) {
     console.error(error);
     throw new Error("Error inputting avatar name: " + error);
@@ -118,7 +114,7 @@ export const pokerStep1 = async (
 ): Promise<void> => {
   const { page } = context;
   if (!page) throw new Error("No page found");
-  debugger;
+
   try {
     await page.waitForSelector(config.selectors.playPoker.step1, {
       visible: true,
@@ -140,7 +136,7 @@ export const pokerStep2 = async (
 ): Promise<void> => {
   const { page } = context;
   if (!page) throw new Error("No page found");
-  debugger;
+
   try {
     const step2Selector = await page.waitForSelector(
       config.selectors.playPoker.step2,
@@ -151,7 +147,7 @@ export const pokerStep2 = async (
     );
     await page.click(config.selectors.playPoker.step2);
     // state.trigger("pokerStep3");
-    state.trigger("finalStage");
+    state.trigger("finalState");
   } catch (error) {
     console.error(error);
     throw new Error("Error inputting avatar name: " + error);

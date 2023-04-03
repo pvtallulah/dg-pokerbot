@@ -9,7 +9,7 @@ const {
   EMAIL_IMAGE_SELECTOR,
   EMAIL_INPUT_SELECTOR,
   GMAIL_EMAIL_INPUT_SELECTOR,
-  CONTINUE_TEXT_SELECTOR,
+  CONTINUE_BUTTON_SELECTOR,
   AGREE_AND_PLAY_SELECTOR,
   START_PLAYING_SELECTOR,
   STEP1_SELECTOR,
@@ -30,7 +30,7 @@ export default {
     loginToPoker: {
       emailImageButton: EMAIL_IMAGE_SELECTOR || "",
       emailInput: EMAIL_INPUT_SELECTOR || "",
-      continueButton: CONTINUE_TEXT_SELECTOR || "",
+      continueButton: CONTINUE_BUTTON_SELECTOR || "",
       fillGmailEmailInput: GMAIL_EMAIL_INPUT_SELECTOR || "",
       agreeAndPlayButton: AGREE_AND_PLAY_SELECTOR || "",
       startPlayingButton: START_PLAYING_SELECTOR || "",
