@@ -1,9 +1,9 @@
 import { getUrl } from "./readEmail";
-import puppeteer, { Page } from "puppeteer";
+import puppeteer from "puppeteer-extra";
+import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { State } from "@edium/fsm";
 
 import { Context } from "./interfaces";
-
 import * as constants from "./constants";
 
 export const startPuppeteer = async (
@@ -11,9 +11,12 @@ export const startPuppeteer = async (
   context: Context
 ): Promise<void> => {
   try {
-    const browser = await puppeteer.launch({ headless: false });
+    const browser = await puppeteer
+      .use(StealthPlugin())
+      .launch({ headless: false, ignoreHTTPSErrors: true });
     const page = await browser.newPage();
     if (page) {
+      context.browser = browser;
       context.page = page;
       state.trigger("loadDecentralgames");
     } else {
@@ -89,7 +92,6 @@ export const fillEmailInput = async (state: State, context: Context) => {
       await emailInputSelector?.type("maikinahara.dg@gmail.com", {
         delay: 50,
       });
-      debugger;
       state.trigger("clickContinueEmailButton");
     }
   } catch (error) {
@@ -110,7 +112,6 @@ export const clickContinueEmailButton = async (
           (button) => button.textContent?.trim() === "Continue"
         )
       );
-
       await page.evaluate(() => {
         const continueButton = Array.from(
           document.querySelectorAll("button")
@@ -118,8 +119,8 @@ export const clickContinueEmailButton = async (
           return button.textContent?.trim() === "Continue";
         });
         continueButton?.click();
-        state.trigger("final");
       });
+      state.trigger("createOauth2Client");
       // const continueEmailButtonSelector = await page.waitForSelector(
       //   constants.CONTINUE_TEXT_SELECTOR
       // );

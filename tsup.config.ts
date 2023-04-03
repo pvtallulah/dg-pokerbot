@@ -37,7 +37,7 @@ export default defineConfig((options) => {
     format: ["esm", "cjs"],
     minify: false,
     treeshake: false,
-    platform: "node",
+    // platform: "node",
     loader: {
       ".json": "file",
     },

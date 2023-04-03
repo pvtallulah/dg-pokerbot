@@ -1,6 +1,7 @@
 import { State, StateMachine } from "@edium/fsm";
 import { Page } from "puppeteer";
 
+import { Context } from "../interfaces";
 import {
   startPuppeteer,
   loadDecentralGames,
@@ -9,13 +10,20 @@ import {
   fillEmailInput,
   clickContinueEmailButton,
 } from "../loginToPoker";
-import { Context } from "../interfaces";
+import {
+  createOauth2Client,
+  validateToken,
+  getNewToken,
+  setCredentials,
+  addToken,
+} from "../readEmail";
 
 const context: Context = {
-  randomize: () => {
-    return Math.floor(Math.random() * 2);
-  },
+  browser: null,
   page: null,
+  code: "",
+  oAuth2Client: null,
+  token: null,
 };
 
 export class PokerbotFSM extends StateMachine {
@@ -62,6 +70,32 @@ export class PokerbotFSM extends StateMachine {
       clickContinueEmailButton
     );
 
+    const createOauth2ClientState = this.createState(
+      "Create OAuth client",
+      false,
+      createOauth2Client
+    );
+
+    const validateTokenState = this.createState(
+      "Validate token",
+      false,
+      validateToken
+    );
+
+    const setCredentialsState = this.createState(
+      "Set credentials",
+      false,
+      setCredentials
+    );
+
+    const getNewTokenState = this.createState(
+      "Get new token",
+      false,
+      getNewToken
+    );
+
+    const addTokenState = this.createState("Add token", false, addToken);
+
     const finalState = this.createState("Final state", true);
 
     initialState.addTransition("loadDecentralgames", loadDecentralGamesState);
@@ -86,7 +120,18 @@ export class PokerbotFSM extends StateMachine {
       clickContinueEmailButtonState
     );
 
-    clickContinueEmailButtonState.addTransition("final", finalState);
+    clickContinueEmailButtonState.addTransition(
+      "createOauth2Client",
+      createOauth2ClientState
+    );
+
+    createOauth2ClientState.addTransition("validateToken", validateTokenState);
+
+    validateTokenState.addTransition("setCredentials", setCredentialsState);
+    validateTokenState.addTransition("getNewToken", getNewTokenState);
+    getNewTokenState.addTransition("addToken", addTokenState);
+    addTokenState.addTransition("setCredentials", setCredentialsState);
+    setCredentialsState.addTransition("finalState", finalState);
 
     this.start(initialState);
   }
