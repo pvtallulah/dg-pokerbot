@@ -18,6 +18,11 @@ const {
   AVATAR_NAME_INPUT_SELECTOR,
   AVATAR_NAME_CONFIRM_SELECTOR,
   STEP2_SELECTOR,
+  WHAT_IS_SHINE_SELECTOR,
+  CHECK_IN_FLOW_SELECTOR,
+  SELECT_GAME_MODE_SELECTOR,
+  JOIN_TOURNAMENT_SELECTOR,
+  WELCOME_TO_TABLE_SELECTOR,
 } = process.env;
 
 export default {
@@ -38,11 +43,16 @@ export default {
     },
     playPoker: {
       step1: STEP1_SELECTOR || "",
+      whatIsShine: WHAT_IS_SHINE_SELECTOR || "",
       randomizeAvatarButton: RANDOMIZE_AVATAR_SELECTOR || "",
       selectAvatarButton: SELECT_AVATAR_SELECTOR || "",
       avatarNameInput: AVATAR_NAME_INPUT_SELECTOR || "",
       avatarNameConfirmButton: AVATAR_NAME_CONFIRM_SELECTOR || "",
       step2: STEP2_SELECTOR || "",
+      checkInFlow: CHECK_IN_FLOW_SELECTOR || "",
+      selectGameMode: SELECT_GAME_MODE_SELECTOR || "",
+      joinTournament: JOIN_TOURNAMENT_SELECTOR || "",
+      welcomeToTable: WELCOME_TO_TABLE_SELECTOR || "",
     },
   },
 };

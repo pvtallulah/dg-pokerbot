@@ -9,6 +9,7 @@ import { Context } from "./interfaces";
 import { delay } from "./utils/util";
 
 import config from "./config/config";
+
 const SCOPES: string[] = ["https://www.googleapis.com/auth/gmail.readonly"];
 const TOKEN_PATH: string = path.join(__dirname, "gApi", "token.json");
 
@@ -23,7 +24,10 @@ const saveToken = (token: Auth.Credentials) => {
       JSON.stringify(token),
       (err) => {
         if (err) return console.error(err);
-        console.log("Token stored to", TOKEN_PATH);
+        console.log(
+          "**DEVELOPMENT** Token stored to",
+          path.join(__dirname, "../src/gApi/token.json")
+        );
       }
     );
   } catch (error) {

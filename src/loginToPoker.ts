@@ -1,11 +1,40 @@
+import fs from "fs";
 import puppeteer from "puppeteer-extra";
-import { Page, Target } from "puppeteer";
+import path from "path";
+import { Protocol } from "puppeteer";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { State } from "@edium/fsm";
 
 import { Context } from "./interfaces";
 import config from "./config/config";
 import { delay } from "./utils/util";
+import { PrettyConsole } from "./utils/prettyConsole";
+const prettyConsole = new PrettyConsole();
+const readCookes = async (): Promise<Protocol.Network.Cookie[]> => {
+  const hasCookies = fs.existsSync(
+    path.join(__dirname, "../public", "cookies.json")
+  );
+  if (!hasCookies) return [];
+  const cookies = fs.readFileSync(
+    path.join(__dirname, "../public", "cookies.json"),
+    "utf8"
+  );
+  return JSON.parse(cookies);
+};
+
+const saveCookies = async (
+  cookies: Protocol.Network.Cookie[]
+): Promise<void> => {
+  fs.writeFile(
+    path.join(__dirname, "../public", "cookies.json"),
+    JSON.stringify(cookies),
+    (err: any) => {
+      if (err) {
+        console.error(err);
+      }
+    }
+  );
+};
 
 export const startPuppeteer = async (
   state: State,
@@ -16,6 +45,8 @@ export const startPuppeteer = async (
       .use(StealthPlugin())
       .launch({ headless: false, ignoreHTTPSErrors: true });
     const page = await browser.newPage();
+    const cookies = await readCookes();
+    if (cookies.length) await page.setCookie(...cookies);
     if (page) {
       context.browser = browser;
       context.page = page;
@@ -113,7 +144,7 @@ export const clickContinueEmailButton = async (
       state.trigger("createOauth2Client");
     }
   } catch (error) {
-    console.log(error);
+    prettyConsole.error(error);
     throw new Error("Error clicking continue email button");
   }
 };
@@ -122,58 +153,56 @@ export const agreeAndPlay = async (state: State, context: Context) => {
   try {
     const { page } = context;
     if (!page) throw new Error("Page not found");
-    let startPlayingButton: any = null;
-    let agreeAndPlayButton: any = null;
     let buttonToPress: any = null;
+    const cookies = await page.cookies();
+    saveCookies(cookies);
+    await delay(4000);
     try {
-      startPlayingButton = await page.waitForSelector(
+      await page.waitForSelector(
         config.selectors.loginToPoker.startPlayingButton,
         {
           visible: true,
-          timeout: 15000,
+          timeout: 2000,
         }
       );
-      if (startPlayingButton)
-        buttonToPress = config.selectors.loginToPoker.startPlayingButton;
+      buttonToPress = config.selectors.loginToPoker.startPlayingButton;
     } catch (error) {
-      console.log(
+      prettyConsole.info(
         "Start playing button not found, will try to find agree and play button"
       );
     }
     try {
-      if (!startPlayingButton) {
-        agreeAndPlayButton = await page.waitForSelector(
+      if (!buttonToPress) {
+        await page.waitForSelector(
           config.selectors.loginToPoker.agreeAndPlayButton,
           {
             visible: true,
-            timeout: 15000,
+            timeout: 2000,
           }
         );
-      }
-      if (agreeAndPlayButton)
         buttonToPress = config.selectors.loginToPoker.agreeAndPlayButton;
+      }
     } catch (error) {
-      console.log("Agree and play button not found");
+      prettyConsole.info("Agree and play button not found");
       throw new Error("Play button and agree button not found");
     }
 
     if (!buttonToPress) throw new Error("No button found");
     await page.click(buttonToPress);
     try {
-      const step1SelectorButton = await page.waitForSelector(
-        config.selectors.loginToPoker.step1,
-        {
-          visible: true,
-          timeout: 5000,
-        }
-      );
-      if (step1SelectorButton) state.trigger("pokerStep1");
-      else state.trigger("randomizeAvatar");
+      await page.waitForSelector(config.selectors.loginToPoker.step1, {
+        visible: true,
+        timeout: 60000,
+      });
+      state.trigger("pokerStep1");
     } catch (error) {
+      debugger;
+      prettyConsole.assert("Step 1 not found");
       state.trigger("randomizeAvatar");
     }
   } catch (error) {
-    console.log(error);
-    throw new Error("Error clicking continue email button");
+    debugger;
+    prettyConsole.error(error);
+    throw new Error("Error clicking agreeAndPlay button: " + error);
   }
 };

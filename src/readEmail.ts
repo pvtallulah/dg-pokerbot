@@ -1,8 +1,11 @@
-import { Page, Target } from "puppeteer";
-import { Auth, google } from "googleapis";
+import { Target } from "puppeteer";
+import { google } from "googleapis";
 import { Context } from "./interfaces/fsm";
 import { State } from "@edium/fsm";
 import { delay } from "./utils/util";
+import { PrettyConsole } from "./utils/prettyConsole";
+const prettyConsole = new PrettyConsole();
+
 export const readEmail = async (
   state: State,
   context: Context
@@ -90,11 +93,13 @@ export const authWeb3Auth = async (
               await maybeNextTimeButton.click();
             }
           } catch (error) {
-            console.log(error);
+            prettyConsole.error(error);
           }
+        } else {
+          console.log("No page found");
         }
       }
     }
+    state.trigger("agreeAndPlay");
   }
-  state.trigger("agreeAndPlay");
 };

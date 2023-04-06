@@ -29,6 +29,11 @@ import {
   confirmAvatarName,
   pokerStep1,
   pokerStep2,
+  whatIsShine,
+  checkInFlow,
+  selectGameMode,
+  joinTournament,
+  welcomeToTable,
 } from "../playPoker";
 
 const context: Context = {
@@ -150,6 +155,36 @@ export class PokerbotFSM extends StateMachine {
 
     const pokerStep1State = this.createState("Poker step 1", false, pokerStep1);
 
+    const whatIsShineState = this.createState(
+      "What is shine",
+      false,
+      whatIsShine
+    );
+
+    const checkInFlowState = this.createState(
+      "Check in flow",
+      false,
+      checkInFlow
+    );
+
+    const selectGameModeState = this.createState(
+      "Select game mode",
+      false,
+      selectGameMode
+    );
+
+    const joinTournamentState = this.createState(
+      "Join tournament",
+      false,
+      joinTournament
+    );
+
+    const welcomeToTableState = this.createState(
+      "Welcome to table",
+      false,
+      welcomeToTable
+    );
+
     const pokerStep2State = this.createState("Poker step 2", false, pokerStep2);
 
     const finalState = this.createState("Final state", true);
@@ -200,6 +235,12 @@ export class PokerbotFSM extends StateMachine {
     );
     confirmAvatarNameState.addTransition("pokerStep1", pokerStep1State);
     pokerStep1State.addTransition("pokerStep2", pokerStep2State);
+    pokerStep1State.addTransition("whatIsShine", whatIsShineState);
+    whatIsShineState.addTransition("checkInFlow", checkInFlowState);
+    checkInFlowState.addTransition("selectGameMode", selectGameModeState);
+    selectGameModeState.addTransition("joinTournament", joinTournamentState);
+    joinTournamentState.addTransition("welcomeToTable", welcomeToTableState);
+    welcomeToTableState.addTransition("finalState", finalState);
     pokerStep2State.addTransition("finalState", finalState);
 
     this.start(initialState);
